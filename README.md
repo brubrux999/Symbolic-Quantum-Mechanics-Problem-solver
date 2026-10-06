@@ -7,15 +7,15 @@ Additionally, the project involves performing other calculations—such as Fouri
 
 ## :pushpin: Objectives
 
-[] Necessary classes and objects
-[] Necessary symbols and expressions
-[] Potential well
-[] Potential barrier
-[] Quantum harmonic oscillator
-[] Fourier transform
-[] Probability density
-[] Expectation value
-[] Variance
+- [] Necessary classes and objects
+- [] Necessary symbols and expressions
+- [] Potential well
+- [] Potential barrier
+- [] Quantum harmonic oscillator
+- [] Fourier transform
+- [] Probability density
+- [] Expectation value
+- [] Variance
 
 ## :soon: Future Updates
 
@@ -32,15 +32,15 @@ Asimismo, se buscan otros cálculos como Transformadas de Fourier, Densidades de
 
 ## :pushpin: Objetivos
 
-[] Clases y objetos necesarios
-[] Simbolos y expresiones necesarias
-[] Pozo de potencial
-[] Barrera de potencial
-[] Oscilador armónico cuántico
-[] Transformada de Fourier
-[] Densidad de probabilidad
-[] Valor esperado
-[] Varianza
+- [] Clases y objetos necesarios
+- [] Simbolos y expresiones necesarias
+- [] Pozo de potencial
+- [] Barrera de potencial
+- [] Oscilador armónico cuántico
+- [] Transformada de Fourier
+- [] Densidad de probabilidad
+- [] Valor esperado
+- [] Varianza
 
 ## :soon: Próximas mejoras
 
