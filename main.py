@@ -1,20 +1,26 @@
 import sympy as sp
 from sympy import pprint
+# Abstract Base Classes
+from abc import ABC, abstractmethod
 
 sp.init_printing()
 
 # Símbolos globales
 x, p = sp.symbols("x p", real=True)
 
-# Con esta clase padre determinamos la estructura de todos los potenciales
-class Potential:
+# Con ABC obligamos a que cualquier clase hija tenga los siguientes métodos
+# Aseguramos el Duck Typing
+class Potential(ABC):
 
+    @abstractmethod
     def expression(self):
         pass
 
+    @abstractmethod
     def equilibrium_points(self):
         pass
 
+    @abstractmethod
     def boundary_points(self):
         pass
 
