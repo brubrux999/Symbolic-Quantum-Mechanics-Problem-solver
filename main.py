@@ -58,50 +58,78 @@ class HarmonicOscillator(Potential):
 
 class InfiniteWell(Potential):
 
-    def __init__(self, L):
-        self._L = L
-        self._V = sp.Piecewise(
-            (0, (x > -self._L) & (x < self._L)), # 0 entre -L y L
-            (sp.oo, True)                        # infinito para el resto
-        )
+    def __init__(self, x, L=None):
+        self._x = x
+
+        if L == None:
+            self._L = sp.Symbol("L", positive=True)
+        else:
+            self._L = sp.Integer(L)
+
+        # Solo nos interesa la solución dentro del pozo, donde V(x) = 0
+        self._expr = sp.Integer(0)
 
     @property
-    def L(self):
+    def width(self):
         return self._L
 
     @property
     def expression(self):
-        return self._V
+        return self._expr
+
+    def equilibrium_points(self):
+        return (
+            f"Equilibrio indiferente en todo el intervalo ({-self._L}, {self._L}), "
+            f"Equilibrio estable límite en los puntos {self.boundary_points()}"
+        )
 
     def boundary_points(self):
         return (-self._L, self._L)
 
+    def boundary_conditions(self, wave_function):
+        return {
+            wave_function.subs(self._x, 0): 0,      # psi(0) = 0
+            wave_function.subs(self._x, self._L): 0 # psi(L) = 0
+        }
+
 class PotentialBarrier(Potential):
     
-    def __init__(self, V0, a):
-        self._V0 = V0
+    def __init__(self, x, V0, a):
+        self._x = x
+        self._V0 = sp.Integer(V0)
         self._a = a
-        self._V = sp.Piecewise(
-            (0, x < 0),   # Región I (0 para x < 0)
-            (V0, x <= a), # Región II (V0 entre 0 y a)
-            (0, True)     # Región III (0 para x > a)
-        )
 
     @property
     def width(self):
         return self._a
     
     @property
-    def initial_potential(self):
+    def V0(self):
         return self._V0
 
     @property
-    def potential(self):
-        return self._V
+    def expression(self):
+        # Buscamos resolver una EDO para cada región
+        return {
+            "Región I": 0,         # Región I (0 para x < 0)
+            "Región II": self._V0, # Región II (V0 entre 0 y a)
+            "Región III": 0        # Región III (0 para x > a)
+        }
 
-    @property
+    def equilibrium_points(self):
+        return (
+            f"Equilibrio indiferente en los intervalos ({-sp.oo}, 0), (0, {self._a}) y ({self._a}, {sp.oo}), "
+            f"Equilibrio inestable límite en los puntos {self.boundary_points()}"
+        )
+
     def boundary_points(self):
         return (0, self._a)
+
+    def boundary_conditions(self, wave_function_I, wave_function_II, wave_function_III):
+        return {
+            wave_functionI.subs(self._x, 0): wave_function_II.subs(self._x, 0),               # psi_I(0) = psi_II(0)
+            wave_function_II.subs(self._x, self._a): wave_function_III.subs(self._x, self._a) # psi_II(a) = psi_III(a)
+        }
 
 class QuantumSystem():
 
@@ -121,7 +149,7 @@ class QuantumSystem():
         # Ecuación de Schrödinger independiente del tiempo
         V = self._potential.expression
         T = -(self._hbar**2 / (2 * self._m)) * sp.Derivative(self._psi, self._x, 2)
-        H = T + V
+        H = T + V # Añadir para diferentes regiones de V
         self._equation = sp.Eq(self._E * self._psi, H * self._psi, evaluate=False)
 
     def solve(self):
@@ -143,17 +171,21 @@ class QuantumSystem():
         ...
 
 # Pequeña prueba para ver que todo se ejecute correctamente
-zero_potential = Constant(0)
-oscillator = HarmonicOscillator(x)
-free_particle = QuantumSystem(x, zero_potential)
-harmonic_oscillator = QuantumSystem(x, oscillator)
+pot_barr = PotentialBarrier(x, 10, 1)
+well = InfiniteWell(x)
 
-pprint("PARTICULA LIBRE")
-pprint(zero_potential.equilibrium_points())
-pprint("La ecuación a resolver es:")
-pprint(free_particle.solve())
+#particle_well = QuantumSystem(x, well)
+#particle_barr = QuantumSystem(x, pot_barr)
 
-pprint("OSCILADOR ARMÓNICO")
-pprint(oscillator.equilibrium_points())
+pprint("POZO DE POTENCIAL")
+pprint(well.equilibrium_points())
 pprint("La ecuación a resolver es:")
-pprint(harmonic_oscillator.solve())
+#pprint(particle_well.solve())
+pprint("\n")
+
+pprint("BARRERA DE POTENCIAL")
+pprint(pot_barr.equilibrium_points())
+pprint("La ecuación a resolver es:")
+#pprint(particle_barr.solve())
+
+# Nos arroja error dado que V es un diccionario, y no esta definida T + V 
