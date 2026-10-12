@@ -88,8 +88,8 @@ class InfiniteWell(Potential):
 
     def boundary_conditions(self, wave_function):
         return {
-            wave_function.subs(self._x, 0): 0,      # psi(0) = 0
-            wave_function.subs(self._x, self._L): 0 # psi(L) = 0
+            wave_function(0): 0, # psi(-L) = 0
+            wave_function(self._L): 0   # psi(L) = 0
         }
 
 class PotentialBarrier(Potential):
@@ -141,19 +141,27 @@ class QuantumSystem():
         # Símbolos de la partícula
         self._m = sp.Symbol("m", positive=True)
         self._hbar = sp.Symbol(r"hbar", positive=True)
-        self._E = sp.Symbol("E", real=True)
+        self._E = sp.Symbol("E", positive=True)
 
         # Función incógnita
-        self._psi = sp.Symbol("psi")
+        self._psi = sp.Function("psi")
 
         # Ecuación de Schrödinger independiente del tiempo
         V = self._potential.expression
-        T = -(self._hbar**2 / (2 * self._m)) * sp.Derivative(self._psi, self._x, 2)
+        T = -(self._hbar**2 / (2 * self._m)) * self._psi(self._x).diff(self._x, 2)
         H = T + V # Añadir para diferentes regiones de V
-        self._equation = sp.Eq(self._E * self._psi, H * self._psi, evaluate=False)
+        self._equation = sp.Eq(self._E * self._psi(self._x), H)
+
+    @property
+    def equation(self):
+        return self._equation
 
     def solve(self):
-        return self._equation
+        # Resolvemos para la primera condición de frontera
+        sol_1 = sp.dsolve(self._equation, self._psi(self._x), ics=dict([next(iter(self._potential.boundary_conditions(self._psi).items()))]))
+        # Falta implementar solución para eigenvalores y eigenvectores
+        sol_2 = ...
+        return sol_1
 
     def wave_function(self):
         ...
@@ -171,21 +179,15 @@ class QuantumSystem():
         ...
 
 # Pequeña prueba para ver que todo se ejecute correctamente
-pot_barr = PotentialBarrier(x, 10, 1)
 well = InfiniteWell(x)
+oscillator = HarmonicOscillator(x)
 
-#particle_well = QuantumSystem(x, well)
-#particle_barr = QuantumSystem(x, pot_barr)
+particle_well = QuantumSystem(x, well)
+particle_oscillator = QuantumSystem(x, oscillator)
 
 pprint("POZO DE POTENCIAL")
-pprint(well.equilibrium_points())
 pprint("La ecuación a resolver es:")
-#pprint(particle_well.solve())
+pprint(particle_well.equation)
+pprint("La solución es:")
+pprint(particle_well.solve())
 pprint("\n")
-
-pprint("BARRERA DE POTENCIAL")
-pprint(pot_barr.equilibrium_points())
-pprint("La ecuación a resolver es:")
-#pprint(particle_barr.solve())
-
-# Nos arroja error dado que V es un diccionario, y no esta definida T + V 
