@@ -1,0 +1,4 @@
+# nbstripout: quita las salidas de los notebooks al hacer commit
+*.ipynb filter=nbstripout
+*.zpln filter=nbstripout
+*.ipynb diff=ipynb
