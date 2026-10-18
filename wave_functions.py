@@ -17,24 +17,28 @@ class WaveFunction():
         self._dominio = dominio
 
         # Expresión simbólica normalizada a manejar
-        self._expr = self.normalize(expr)
+        self._expr = self.normalize()
 
     @property
     def expression(self):
         return self._expr
 
-    def normalize(self, expr):
+    # Se normaliza al inicializar la clase, de este modo siempre se trabaja con
+    # funciones normalizadas
+    def normalize(self):
         a, b = self._dominio
-        psi = self._expr
 
-        I = sp.integrate(expr**2, (self._variable, a, b))
+        I = sp.integrate(self.probability_density(), (self._variable, a, b))
         N = 1 / sp.sqrt(I)
-        return sp.simplify(N * psi)
+        return sp.simplify(N * self._expr)
 
     def probability_density(self):
         density = sp.conjugate(self._expr) * self._expr
         return density.simplify()
 
+    # Devuelve otro objeto de la misma clase con una variable y expresión distintas
+    # inverse=False: x -> p
+    # inverse=True: p -> x
     def Fourier_transform(self, inverse=False):
         C = 1 / sp.sqrt(2 * sp.pi * hbar)
 
@@ -56,6 +60,7 @@ class WaveFunction():
             )
             return WaveFunction(self._p, phi.simplify())
 
+    # Calcula el valor esperado del argumento 'variable'
     def expected_value(self, variable):
         a, b = self._dominio
         value = sp.integrate(
@@ -71,12 +76,8 @@ class WaveFunction():
 
     # Muestra una igualdad entre la expresión y su valor matemático
     def show(self, expresion, value, evaluate=False):
+        # Se usa pprint de momento para la visualización en la terminal
         pprint(sp.Eq(expresion, value, evaluate=evaluate))
 
     def plot(self):
-        f = sp.lambdify(x, self._expr, "numpy")
-        t = np.linspace(0, 2*np.pi, 100)
-        plt.plot(t, f(t))
-        plt.grid()
-        plt.show()
         ...
