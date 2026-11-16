@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from sympy import S, solveset, simplify
 
 class MathTools(ABC):
 
@@ -76,5 +77,24 @@ class Matrix(MathTools):
         )
 
     @staticmethod
-    def nontrivial_solution(matrix, variable):
-        ...
+    def nontrivial_solutions(matrix, variable, N=100, dom=S.Reals):
+        # Obtenemos una solución tipo ImageSet
+        k_sol = simplify(
+            solveset(
+                matrix.det(),
+                variable,
+                domain=dom
+            )
+        )
+
+        # Extraemos los N valores de k del ImageSet
+        k_values = set()
+        for branch in sol_k.args:
+            j = branch.lamda.variables[0]
+            for i in range(-N, N+1):
+                value = sp.simplify(branch.lamda.expr.subs(j, i))
+                if value.is_positive:
+                    k_values.add(value)
+
+        order = lambda v: float(v.subs({s: 1 for s in v.free_symbols}))
+        return sorted(k_values, key=order)[:N]
