@@ -1,33 +1,38 @@
 from abc import ABC, abstractmethod
 from sympy import S, solveset, simplify
+from sympy import (
+    MatrixBase,
+    Expr,
+    Symbol
+)
 
 class MathTools(ABC):
 
     @staticmethod
     @abstractmethod
-    def apply(expr, **kwargs):
+    def apply(expr: Expr, **kwargs):
         pass
 
 class Simplify(MathTools):
 
     @staticmethod
-    def apply(expr, old, new):
+    def apply(expr: Expr, old: Expr | Symbol, new):
         return expr.subs(old, new)
 
 class FilterSymbols(MathTools):
 
     @staticmethod
-    def extract_symbols(expr):
+    def extract_symbols(expr: Expr):
         return expr.free_symbols
 
     @staticmethod
-    def exclude_constants(expr, excluded_symbols):
+    def exclude_constants(expr: Expr, excluded_symbols: list):
         return list(
             sorted(expr.free_symbols - set(excluded_symbols), key=str)
         )
 
     @staticmethod
-    def substitute_constants(expr, excluded_symbols, cte=False):
+    def substitute_constants(expr: Expr, excluded_symbols: list, cte: bool=False):
         original_constants = FilterSymbols.exclude_constants
         C1 = sp.Symbol(original_constants[0].name, real=True, nonzero=True)
         C2 = sp.Symbol(original_constants[1].name, real=True)
@@ -42,7 +47,7 @@ class FilterSymbols(MathTools):
         })
 
     @staticmethod
-    def apply(expr, mode="substitute", **kwargs):
+    def apply(expr: Expr, mode="substitute", **kwargs):
         
         operations = {
             "extract": FilterSymbols.extract_symbols,
@@ -58,7 +63,7 @@ class FilterSymbols(MathTools):
 class BoundaryConditions(MathTools):
 
     @staticmethod
-    def apply(expr, var, arg1, imag1, arg2, imag2):
+    def apply(expr: Expr, var: Symbol, arg1, imag1, arg2, imag2):
         return [
             sp.Eq(expr.subs(var, arg1), imag1, evaluate=False),
             sp.Eq(expr.subs(var, arg2), imag2, evaluate=False)
@@ -67,7 +72,7 @@ class BoundaryConditions(MathTools):
 class Matrix(MathTools):
 
     @staticmethod
-    def build_matrix(conditions, constants):
+    def build_matrix(conditions: list, constants: list):
         return sp.Matrix(
             [
                 [
@@ -77,7 +82,7 @@ class Matrix(MathTools):
         )
 
     @staticmethod
-    def nontrivial_solutions(matrix, variable, N=100, dom=S.Reals):
+    def nontrivial_solutions(matrix: MatrixBase, variable: Symbol, N: int=100, dom=S.Reals):
         # Obtenemos una solución tipo ImageSet
         k_sol = simplify(
             solveset(
