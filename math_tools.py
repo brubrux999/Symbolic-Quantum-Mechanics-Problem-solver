@@ -16,7 +16,13 @@ class MathTools(ABC):
 class Simplify(MathTools):
 
     @staticmethod
-    def apply(expr: Expr, old: Expr | Symbol, new):
+    def apply(expr: Expr, old: Expr, new: Symbol):
+        return expr.subs(old, new)
+
+class SolveFor(MathTools):
+
+    @staticmethod
+    def apply(expr: Expr, old: Symbol, new: Expr):
         return expr.subs(old, new)
 
 class FilterSymbols(MathTools):
@@ -103,3 +109,38 @@ class Matrix(MathTools):
 
         order = lambda v: float(v.subs({s: 1 for s in v.free_symbols}))
         return sorted(k_values, key=order)[:N]
+
+class EigenSystem(MathTools):
+
+    @staticmethod
+    def energy_states(symbol: Symbol, symbol_expr: Expr, energy_symbol: Symbol, k_values: list):
+        # Obtenemos la expresión para las E_n a partir de
+        # despejar E del símbolo usado para simplificar y su expresión
+        # y del cual se usó para las soluciones no triviales
+        E_expr = sp.solve(symbol - symbol_expr, energy_symbol)[0]
+
+        E_n = [E_expr.subs(symbol, k_i) for k_i in k_values]
+        return E_n[:N]
+
+    @staticmethod
+    def states(expr: Expr, symbol: Symbol, constants: list, conditions: list, k_values: list):
+        # Aplicamos la primera condición de frontera a la sol general con
+        # las constantes de integración con suposiciones y
+        # obtenemos la expresión de cada estado del sistema
+        psi_expr = expr.subs({constants[1] : conditions[0].rhs})
+
+        psi_n = [psi_expr.subs(symbol, k_i) for k_i in k_values]
+        return psi_n[:N]
+
+    @staticmethod
+    def apply(mode="states", **kwargs):
+        
+        operations = {
+            "energy": EigenSystem.energy_states,
+            "states": EigenSystem.states,
+        }
+
+        if mode not in operations:
+            raise ValueError(f"Unknown mode: {mode}")
+
+        return operations[mode](**kwargs)
