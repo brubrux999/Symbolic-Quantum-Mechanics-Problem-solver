@@ -110,6 +110,19 @@ class Matrix(MathTools):
         order = lambda v: float(v.subs({s: 1 for s in v.free_symbols}))
         return sorted(k_values, key=order)[:N]
 
+    @staticmethod
+    def apply(mode, **kwargs):
+        
+        operations = {
+            "build": Matrix.build_matrix,
+            "solve": Matrix.nontrivial_solutions,
+        }
+
+        if mode not in operations:
+            raise ValueError(f"Unknown mode: {mode}")
+
+        return operations[mode](**kwargs)
+
 class EigenSystem(MathTools):
 
     @staticmethod
