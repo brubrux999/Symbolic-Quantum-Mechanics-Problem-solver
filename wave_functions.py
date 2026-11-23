@@ -1,13 +1,15 @@
 import sympy as sp
 from sympy import pprint
-import matplotlib.pyplot as plt
-import numpy as np
 
 class WaveFunction():
-    
-    def __init__(self, variable, expr, dominio=(-sp.oo, sp.oo)):
+
+    def __init__(self, variable, expr, quantum_number, E_n, dominio=(-sp.oo, sp.oo)):
         # Variable simbólica de la que depende
         self._variable = variable
+
+        # Número cuántico y nivel de energía
+        self._n = quantum_number
+        self._E = E_n
 
         # Límites donde existe la función
         self._dominio = dominio
@@ -19,6 +21,14 @@ class WaveFunction():
     @property
     def expression(self):
         return self._expr
+
+    @property
+    def n(self):
+        return self._n
+
+    @property
+    def E_n(self):
+        return self._E
 
     # Se normaliza al inicializar la clase, de este modo siempre se trabaja con
     # funciones normalizadas
@@ -81,6 +91,3 @@ class WaveFunction():
     def show(self, expresion, value, evaluate=False):
         # Se usa pprint de momento para la visualización en la terminal
         pprint(sp.Eq(expresion, value, evaluate=evaluate))
-
-    def plot(self):
-        ...
