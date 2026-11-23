@@ -6,13 +6,9 @@ class Plotter:
 
     def __init__(
         self,
-        physical_parameters: dict,
         nrows=1, ncols=1, figsize=(10,6),
         grid=True, legend=True
     ):
-        # Valores a sustituir como hbar, longitud del pozo, etc
-        self.physical_parameters = physical_parameters
-
         # Numero de filas y columnas de la figura
         self.nrows = nrows
         self.ncols = ncols
@@ -36,55 +32,146 @@ class Plotter:
         ax.set_title(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        ax.grid(self.grid)
-        ax.legend(self.legend)
+        ax.grid(self.grid, alpha=0.2)
+        if self.legend:
+            ax.legend()
 
-    def numerical_function(self, variable, expression):
+    def numerical_function(self, variable, expression, physical_parameters: dict):
         return sp.lambdify(
             variable,
-            expression.subs(self.physical_parameters),
+            expression.subs(physical_parameters),
             "numpy"
         )
 
+    def add_energy_levels(self, ax, y_e):
+            ax.axhline(
+                y_e,
+                linestyle="--",
+                color="black",
+                alpha=0.5
+            )
+
 class WaveFunctionPlotter(Plotter):
 
-    def __init__(self, xaxis, wavefunctions: list, color="blue", **kwargs):
+    def __init__(
+        self,
+        xaxis, wavefunctions: list, # instancias WaveFunctions
+        physical_parameters: dict, # Símbolos a sustituir
+        energy_scale=1.0, visual_scale=1.0, density_scale=1.0, # Escalas visuales
+        color="blue", **kwargs
+    ):
         super().__init__(**kwargs)
         # Array de numpy para graficar en el eje x
         self.xaxis = xaxis
         
-        # Lista con instancias WaveFunctions
         self.wavefunctions = wavefunctions
+        self.physical_parameters = physical_parameters
 
         # Parámetros para la visualización
+        self.visual_scale = visual_scale
+        self.density_scale = density_scale
+        self.energy_scale = energy_scale
         self.color = color
 
-    def plot(self):
-        # Creamos la figura y los ejes
+    def _plot(
+        self,
+        quantity: str, # wavefunction o density
+        offset_energy=False,
+        energy_parameters: dict = None, # Símbolos a sustituir
+    ):
+
         fig, ax = self.create_figure()
 
-        # Hacemos numérica cada función y la graficamos
         for wf in self.wavefunctions:
 
-            psi = self.numerical_function(
-                wf.variable,
-                wf.expression,
+            if quantity == "wavefunction":
+                expr = wf.expression
+                scale = self.visual_scale
+                label = fr"$\psi_{{{wf.n}}}(x)$"
+
+                title = "Soluciones al Pozo de Potencial Infinito"
+
+            elif quantity == "density":
+                expr = wf.probability_density
+                scale = self.density_scale
+                label = fr"$|\psi_{{{wf.n}}}(x)|^2$"
+
+                title = "Densidades de probabilidad del Pozo Infinito"
+
+            # Obtiene la función a graficar de acuerdo a los parámetros elegidos
+            y, numerical_function = self.get_visual_scale(
+                wf, expr, offset_energy, energy_parameters
             )
 
-            ax.plot(
-                self.xaxis,
-                psi(self.xaxis),
-                color=self.color,
-                label=fr"$\psi_{{{wf.n}}}(x)$"
-            )
+            # Determina el label del eje y
+            if offset_energy:
+                ylabel = r"$E$"
+            else:
+                if quantity == "wavefunction":
+                    ylabel = f"$\psi (x)$"
+                elif quantity == "density":
+                    ylabel = f"$|\psi (x)|^2$"
 
-        # Configuramos la visualización
-        self.configure_axis(self.ax, "Pozo de potencial infinito", "Position", "Energy")
+            ax.plot(xaxis, y, color=self.color, label=label)
 
-        # Mostramos o guardamos la figura
+            # Sombrea el área bajo la curva
+            if quantity == "density":
+                self.add_density_shading(
+                    ax, xaxis, y, y - self.visual_scale * numerical_function,
+                )
+
+        self.configure_axis(ax, title, "Posiciones", ylabel)
         plt.show()
 
-class ProbabilityDensityPlotter(Plotter):
+    def _get_visual_scale(self, wf, expr, offset_energy, energy_parameters=None):
 
-    def plot(self):
-        ...
+        numerical_function = self.numerical_function(
+            wf.varibale,
+            expr,
+            self.physical_parameters
+        )
+
+        if offset_energy:
+            energy = float(wf.E_n.subs(energy_parameters))
+            energy_scale = self.energy_scale
+        else:
+            energy = 0
+
+        return (
+            self.visual_scale * numerical_function(self.xaxis)
+            + self.energy_scale * energy,
+            numerical_function
+        )
+
+    def _add_density_shading(self, ax, xaxis, y1, y2):
+            ax.fill_between(
+                xaxis,
+                y1, # Curva de la cual debajo sombrea
+                y2, # Límite inferior del sombreado
+                color=self.color,
+                alpha=0.5
+            )
+
+    def plot_wavefunctions(self):
+        self._plot(
+            quantity="wavefunction"
+        )
+
+    def plot_energystates(self, energy_parameters: dict):
+        self._plot(
+            quantity="wavefunction",
+            offset_energy=True,
+            energy_parameters=energy_parameters
+        )
+
+    def plot_probability_densities(self):
+        self._plot(
+            quantity="density"
+        )
+
+    def plot_energy_densities(self, energy_parameters):
+        self._plot(
+            quantity="density",
+            offset_energy=True,
+            energy_parameters=energy_parameters
+        )
