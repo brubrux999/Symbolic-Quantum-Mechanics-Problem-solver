@@ -30,20 +30,25 @@ class WaveFunction():
     def E_n(self):
         return self._E
 
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def probability_density(self):
+        return sp.simplify(sp.conjugate(self._expr) * self._expr)
+
     # Se normaliza al inicializar la clase, de este modo siempre se trabaja con
     # funciones normalizadas
     def normalize(self):
         a, b = self._dominio
 
-        I = sp.integrate(self.probability_density(), (self._variable, a, b))
+        I = sp.integrate(self.probability_density, (self._variable, a, b))
         if I == 0:
             raise ValueError("La integral de probabilidad es cero")
 
         N = 1 / sp.sqrt(I)
         return sp.simplify(N * self._expr)
-
-    def probability_density(self):
-        return sp.simplify(sp.conjugate(self._expr) * self._expr)
 
     # Devuelve otro objeto de la misma clase con una variable y expresión distintas
     # inverse=False: x -> p
