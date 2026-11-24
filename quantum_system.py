@@ -1,5 +1,6 @@
 import sympy as sp
 import math_tools as mt
+from wave_functions import WaveFunction
 
 class QuantumSystem():
 
@@ -81,5 +82,15 @@ class QuantumSystem():
 
         return E_n, psi_n
 
-    def wave_function(self):
-        ...
+    # Crea N instancias WaveFunction
+    def wave_function(self, energies: list, functions: list, N: int=4):
+
+        wave_functions = []
+        for i, (E_i, psi_i) in enumerate(
+            zip(energies[:N], functions[:N]), start=1
+        ):
+            wave_functions.append(
+                WaveFunction(self._x, psi_i, i, E_i)
+            )
+        
+        return wave_functions
