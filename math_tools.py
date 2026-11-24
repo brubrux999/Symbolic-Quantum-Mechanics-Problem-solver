@@ -39,7 +39,7 @@ class FilterSymbols(MathTools):
 
     @staticmethod
     def substitute_constants(expr: Expr, excluded_symbols: list, cte: bool=False):
-        original_constants = FilterSymbols.exclude_constants
+        original_constants = FilterSymbols.exclude_constants(expr, excluded_symbols)
         C1 = sp.Symbol(original_constants[0].name, real=True, nonzero=True)
         C2 = sp.Symbol(original_constants[1].name, real=True)
         constants = sorted([C1, C2], key=str)
