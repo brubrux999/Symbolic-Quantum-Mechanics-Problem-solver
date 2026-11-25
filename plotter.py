@@ -6,8 +6,9 @@ class Plotter:
 
     def __init__(
         self,
-        nrows=1, ncols=1, figsize=(10,6),
-        grid=True, legend=True
+        nrows=1, ncols=1, figsize=(6,6),
+        grid=True, legend=True,
+        colors=["#7961A8", "#5686B5", "#59A68D", "#D58C91"]
     ):
         # Numero de filas y columnas de la figura
         self.nrows = nrows
@@ -19,6 +20,7 @@ class Plotter:
         # Otro parámetros
         self.grid = grid
         self.legend = legend
+        self.colors = colors
 
     def create_figure(self):
         self.fig, self.ax = plt.subplots(
@@ -43,13 +45,16 @@ class Plotter:
             "numpy"
         )
 
-    def add_energy_levels(self, ax, y_e):
+    def add_energy_levels(self, ax, y_e, i):
             ax.axhline(
                 y_e,
                 linestyle="--",
-                color="teal",
+                color=self.get_color(i, self.colors),
                 alpha=0.5
             )
+
+    def get_color(self, i, colors: list):
+        return colors[i % len(colors)]
 
 class WaveFunctionPlotter(Plotter):
 
@@ -58,7 +63,7 @@ class WaveFunctionPlotter(Plotter):
         xaxis, wavefunctions: list, # instancias WaveFunctions
         physical_parameters: dict, # Símbolos a sustituir
         energy_scale=1.0, visual_scale=1.0, density_scale=1.0, # Escalas visuales
-        color="blue", **kwargs
+        **kwargs
     ):
         super().__init__(**kwargs)
         # Array de numpy para graficar en el eje x
@@ -71,7 +76,6 @@ class WaveFunctionPlotter(Plotter):
         self.visual_scale = visual_scale
         self.density_scale = density_scale
         self.energy_scale = energy_scale
-        self.color = color
 
     def _plot(
         self,
@@ -82,7 +86,7 @@ class WaveFunctionPlotter(Plotter):
 
         fig, ax = self.create_figure()
 
-        for wf in self.wavefunctions:
+        for i, wf in enumerate(self.wavefunctions):
 
             if quantity == "wavefunction":
                 expr = wf.expression
@@ -100,17 +104,21 @@ class WaveFunctionPlotter(Plotter):
             )
 
             # Graficamos
-            ax.plot(self.xaxis, y, color=self.color, label=label)
+            ax.plot(
+                self.xaxis,
+                y,
+                color=self.get_color(i, self.colors),
+                label=label
+            )
 
             # Lineas horizontales para el nivel de enegía
-            if offset_energy:
-                self.add_energy_levels(ax, y_e)
+            #if offset_energy:
+                #self.add_energy_levels(ax, y_e, i)
 
             # Sombrea el área bajo la curva
-            if quantity == "density":
-                self._add_density_shading(
-                    ax, self.xaxis, y, y_e,
-                )
+            self._add_density_shading(
+                ax, self.xaxis, y, y_e, i
+            )
         
         # Seleccionamos el título y labels correspondientes
         if quantity == "wavefunction":
@@ -152,13 +160,13 @@ class WaveFunctionPlotter(Plotter):
             self.energy_scale * energy
         )
 
-    def _add_density_shading(self, ax, xaxis, y1, y2):
+    def _add_density_shading(self, ax, xaxis, y1, y2, i):
             ax.fill_between(
                 xaxis,
                 y1, # Curva de la cual debajo sombrea
                 y2, # Límite inferior del sombreado
-                color=self.color,
-                alpha=0.5
+                color=self.get_color(i, self.colors),
+                alpha=0.3
             )
 
     def plot_wavefunctions(self):
