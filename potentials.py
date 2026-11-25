@@ -1,4 +1,5 @@
 import sympy as sp
+from abc import ABC, abstractmethod
 
 # Con esta clase padre determinamos la estructura de todos los potenciales
 # Con ABC obligamos a que cualquier clase hija tenga los siguientes métodos

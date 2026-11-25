@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import sympy as sp
 from sympy import S, solveset, simplify
 from sympy import (
     MatrixBase,
@@ -100,7 +101,7 @@ class Matrix(MathTools):
 
         # Extraemos los N valores de k del ImageSet
         k_values = set()
-        for branch in sol_k.args:
+        for branch in k_sol.args:
             j = branch.lamda.variables[0]
             for i in range(-N, N+1):
                 value = sp.simplify(branch.lamda.expr.subs(j, i))
@@ -126,7 +127,13 @@ class Matrix(MathTools):
 class EigenSystem(MathTools):
 
     @staticmethod
-    def energy_states(symbol: Symbol, symbol_expr: Expr, energy_symbol: Symbol, k_values: list):
+    def energy_states(
+        symbol: Symbol,
+        symbol_expr: Expr,
+        energy_symbol: Symbol,
+        k_values: list,
+        N: int=100
+    ):
         # Obtenemos la expresión para las E_n a partir de
         # despejar E del símbolo usado para simplificar y su expresión
         # y del cual se usó para las soluciones no triviales
@@ -136,7 +143,14 @@ class EigenSystem(MathTools):
         return E_n[:N]
 
     @staticmethod
-    def states(expr: Expr, symbol: Symbol, constants: list, conditions: list, k_values: list):
+    def states(
+        expr: Expr,
+        symbol: Symbol,
+        constants: list,
+        conditions: list,
+        k_values: list,
+        N: int=100
+    ):
         # Aplicamos la primera condición de frontera a la sol general con
         # las constantes de integración con suposiciones y
         # obtenemos la expresión de cada estado del sistema

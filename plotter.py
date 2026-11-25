@@ -47,7 +47,7 @@ class Plotter:
             ax.axhline(
                 y_e,
                 linestyle="--",
-                color="black",
+                color="teal",
                 alpha=0.5
             )
 
@@ -89,44 +89,52 @@ class WaveFunctionPlotter(Plotter):
                 scale = self.visual_scale
                 label = fr"$\psi_{{{wf.n}}}(x)$"
 
-                title = "Soluciones al Pozo de Potencial Infinito"
-
             elif quantity == "density":
                 expr = wf.probability_density
                 scale = self.density_scale
                 label = fr"$|\psi_{{{wf.n}}}(x)|^2$"
 
-                title = "Densidades de probabilidad del Pozo Infinito"
-
             # Obtiene la función a graficar de acuerdo a los parámetros elegidos
-            y, numerical_function = self.get_visual_scale(
+            y, numerical_function, y_e = self._get_visual_scale(
                 wf, expr, offset_energy, energy_parameters
             )
 
-            # Determina el label del eje y
-            if offset_energy:
-                ylabel = r"$E$"
-            else:
-                if quantity == "wavefunction":
-                    ylabel = f"$\psi (x)$"
-                elif quantity == "density":
-                    ylabel = f"$|\psi (x)|^2$"
+            # Graficamos
+            ax.plot(self.xaxis, y, color=self.color, label=label)
 
-            ax.plot(xaxis, y, color=self.color, label=label)
+            # Lineas horizontales para el nivel de enegía
+            if offset_energy:
+                self.add_energy_levels(ax, y_e)
 
             # Sombrea el área bajo la curva
             if quantity == "density":
-                self.add_density_shading(
-                    ax, xaxis, y, y - self.visual_scale * numerical_function,
+                self._add_density_shading(
+                    ax, self.xaxis, y, y_e,
                 )
+        
+        # Seleccionamos el título y labels correspondientes
+        if quantity == "wavefunction":
+            title = "Soluciones al Pozo de Potencial Infinito"
+            if offset_energy:
+                ylabel = r"$E$"
+            else:
+                ylabel = f"$\psi (x)$"
 
-        self.configure_axis(ax, title, "Posiciones", ylabel)
+        elif quantity == "density":
+            title = "Densidades de probabilidad del Pozo Infinito"
+            if offset_energy:
+                ylabel = r"$E$"
+            else:
+                ylabel = f"$|\psi (x)|^2$"
+
+        # Configuramos los ejes con los parámetros seleccionados
+        self.configure_axis(ax, title, "Posiciones" + f"$(x)$", ylabel)
         plt.show()
 
     def _get_visual_scale(self, wf, expr, offset_energy, energy_parameters=None):
 
         numerical_function = self.numerical_function(
-            wf.varibale,
+            wf.variable,
             expr,
             self.physical_parameters
         )
@@ -140,7 +148,8 @@ class WaveFunctionPlotter(Plotter):
         return (
             self.visual_scale * numerical_function(self.xaxis)
             + self.energy_scale * energy,
-            numerical_function
+            numerical_function,
+            self.energy_scale * energy
         )
 
     def _add_density_shading(self, ax, xaxis, y1, y2):
