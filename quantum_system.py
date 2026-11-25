@@ -59,7 +59,7 @@ class QuantumSystem():
             mode="build", conditions=conditions, constants=constants
         )
         k_values = mt.Matrix.apply(
-            mode="solve", matrix=matrix, variable=k, N=50, 
+            mode="solve", matrix=matrix, variable=k, N=50, # N soluciones
         )
 
         # Obtenemos los estados y energías
@@ -83,14 +83,14 @@ class QuantumSystem():
         return E_n, psi_n
 
     # Crea N instancias WaveFunction
-    def wave_function(self, energies: list, functions: list, N: int=4):
+    def wave_function(self, energies: list, functions: list, N1: int=1, N2: int=1):
 
         wave_functions = []
         for i, (E_i, psi_i) in enumerate(
-            zip(energies[:N], functions[:N]), start=1
+            zip(energies[N1-1:N2], functions[N1-1:N2]), start=N1
         ):
             wave_functions.append(
-                WaveFunction(self._x, psi_i, i, E_i)
+                WaveFunction(self._x, psi_i, i, E_i, dominio=(0, self._L))
             )
         
         return wave_functions
